@@ -1,6 +1,6 @@
 # Developer tools
 tools/
-submissions/PY102001000
+
 # Stop tracking
 .DS_Store
 .pytest_cache
