@@ -38,6 +38,46 @@ jobs:
         run: |
           python autograder/grade.py
 
+      - name: Upload grading result (JSON)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: autograder-result-${{ github.event.pull_request.number }}
+          path: submissions/**/autograder_results.json
+          if-no-files-found: error
+
+      - name: Write score to job summary
+        if: always()
+        run: |
+          echo "## Autograde result" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat submissions/**/autograder_results.json >> $GITHUB_STEP_SUMMARY
+
+      - name: Extract score from JSON
+        id: score
+        if: always()
+        run: |
+          RESULT_FILE=$(ls submissions/**/autograder_results.json | head -n 1)
+          python - <<PY
+          import json
+          path = "$RESULT_FILE"
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+          earned = int(data.get("earned", 0))
+          maxp = int(data.get("max", 0))
+          with open("${GITHUB_OUTPUT}", "a", encoding="utf-8") as out:
+              out.write(f"final={earned}/{maxp}\n")
+          PY
+
+      - name: Comment score on PR
+        if: always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: autograde-score
+          message: |
+            ✅ **Autograde Result**
+            - **FINAL SCORE:** **${{steps.score.outputs.final}}**
+
       - name: Enable auto-merge
         if: success()
         uses: peter-evans/enable-pull-request-automerge@v3
