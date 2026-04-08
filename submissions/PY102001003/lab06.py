@@ -133,5 +133,5 @@ def personal_priority_q():
     for i in range(1,len(priorty_q)):
         helper_fun1_(priorty_q, i)
     return priorty_q
-print(personal_priority_q())
+# print(personal_priority_q())
 
